@@ -1,0 +1,3 @@
+#ignore the "useless" files VS creates because they take too much space
+*.opendb
+*.db
