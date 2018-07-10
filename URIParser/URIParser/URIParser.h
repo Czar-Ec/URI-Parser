@@ -16,7 +16,6 @@ class URIParser
 
 
 		std::string getStr() { return str; };
-		std::string getProtocol() { return protocol; };
 		std::string getScheme() { return scheme; };
 		std::string getUser() { return user; };
 		std::string getPassword() { return password; };
@@ -35,10 +34,10 @@ class URIParser
 		//string variables to store the specific parts of the URI
 		std::string
 			str, // save the string used to instantiate the parser
-			protocol, //protocol type
 			scheme, //identifies unique schemes
 
 			//user information
+			authority,
 			user,
 			password,
 
@@ -73,7 +72,7 @@ URIParser::URIParser(std::string uriStr)
 		}
 		else
 		{
-			std::cout << "The URI is missing a protocol or scheme\n\n";
+			std::cout << "The URI is missing a scheme and path/authority\n\n";
 		}
 	}
 }
@@ -86,7 +85,6 @@ URIParser::~URIParser()
 inline std::string URIParser::printAll()
 {
 	return
-		"Protocol: " + getProtocol() + "\n" +
 		"Scheme: " + getScheme() + "\n" +
 		"User: " + getUser() + "\n" +
 		"Password: " + getPassword() + "\n" +
@@ -99,30 +97,50 @@ inline std::string URIParser::printAll()
 
 bool URIParser::regexCheck(std::string str)
 {
-	bool valid = true;
+	bool validScheme = true, auth_or_path_exists = false;
 
 	std::string tempStr = str;
-
-	//check for protocol
+	//check for scheme
 	if (tempStr.find("://") != std::string::npos)
 	{
-		protocol = tempStr.substr(0, tempStr.find("://"));
-		tempStr = tempStr.substr(tempStr.find("://"));
+		scheme = tempStr.substr(0, tempStr.find(":/"));
+		tempStr = tempStr.substr(tempStr.find(":/"));
+		tempStr.erase(0, 3);
+		//std::cout << tempStr << std::endl;
 	}
 	else if (tempStr.find(":\\") != std::string::npos)
 	{
-		protocol = tempStr.substr(0, tempStr.find(":\\"));
+		scheme = tempStr.substr(0, tempStr.find(":\\"));
 		tempStr = tempStr.substr(tempStr.find(":\\"));
+		tempStr.erase(0, 2);
+		//std::cout << tempStr << std::endl;
+	}
+	else if (tempStr.find(":"))
+	{
+		scheme = tempStr.substr(0, tempStr.find(":"));
+		tempStr = tempStr.substr(tempStr.find(":"));
+		tempStr.erase(0, 1);
+		//std::cout << tempStr << std::endl;
 	}
 	else
 	{
-		valid = false;
-		protocol = "NOT FOUND";
+		validScheme = false;
+		scheme = "NOT FOUND";
 	}
 
-	std::cout << tempStr << std::endl;
+	//check for the authority if there is any
+	if (tempStr.find("@"))
+	{
+		authority = tempStr.substr(0, tempStr.find("@"));
+		tempStr = tempStr.substr(tempStr.find("@") + 1);
+
+		user = authority.substr(0, authority.find(":"));
+		//usually not a good idea to include the password unencrypted but this is just to parse the URI
+		//I am interested in cybersecurity though
+		password = authority.substr(authority.find(":") + 1);
+	}
 
 
-	return valid;
+	return validScheme && auth_or_path_exists;
 }
 
