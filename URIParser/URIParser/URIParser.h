@@ -5,7 +5,14 @@
 #include <algorithm>
 #include <regex>
 
-
+/**
+* URIParser
+* class that takes in a string input and automatically parses
+* the input into components of a URI and also checks if the URI
+* is syntactically valid
+* 
+* created by Czar Ian Echavez (CzarEc)
+*/
 class URIParser
 {
 	public:
@@ -15,31 +22,88 @@ class URIParser
 		//getters for each specific part of the URI
 		//no setters as each instance of URIParser should be for a specific uriStr input
 
-
+		/**
+		* getStr
+		* returns input string
+		* @return str
+		*/
 		std::string getStr() { return str; };
+
+		/**
+		* getScheme
+		* returns the protocol or scheme of the URI
+		* @return scheme
+		*/
 		std::string getScheme() { return scheme; };
+
+		/**
+		* getUser
+		* returns the parsed user string
+		* @return user
+		*/
 		std::string getUser() { return user; };
+
+		/**
+		* getPassword
+		* returns the parsed password string
+		* @return password
+		*/
 		std::string getPassword() { return password; };
+
+		/**
+		* getHost
+		* returns the parsed host (subdomain and domain) string
+		* @return host
+		*/
 		std::string getHost() { return host; };
+
+		/**
+		* getPort
+		* returns the port (if there are any found)
+		* @return port
+		*/
 		std::string getPort() { 
 			if (port < 0)
 				return "NO / DEFAULT PORT";
 			else
 			return std::to_string(port); };
+
+		/**
+		* getPath
+		* returns the parsed path string
+		* @return path
+		*/
 		std::string getPath() { return path; };
+
+		/**
+		* getQuery
+		* returns the parsed query string
+		* @return query
+		*/
 		std::string getQuery() { return query; };
+
+		/**
+		* getFragment
+		* returns the parsed fragment string
+		* @return fragment
+		*/
 		std::string getFragment() { return fragment; };
 
 		std::string printAll();
 
-		//regex check, to validate each part of the URI as valid or not
 		int URITypeCheck(std::string str);
 
-		//prints error to screen
-		void errorListAdd(std::string error) { errorList.push_back(error); }
+		/**
+		* getErrorList
+		* returns a vector list of the errors found when parsing the input string
+		* @return std::vector<std::string> errorList
+		*/
 		std::vector<std::string> getErrorList() { return errorList; }
 
-		//uriTypes
+		/**
+		* URI Types
+		* constant variables used to determine the different type of URI for each string input
+		*/
 		const int URL_TYPE_URI = 0,
 			FILE_TYPE_URI = 1,
 			URN_TYPE_URI = 2,
@@ -47,7 +111,13 @@ class URIParser
 
 	private:
 
-		//validates host domain
+		/**
+		* errorListAdd
+		* adds an error to the error list to be printed out for later
+		* @param std::string error
+		*/
+		void errorListAdd(std::string error) { errorList.push_back(error); }
+
 		bool checkHostDomain(std::string str);
 
 		//string variables to store the specific parts of the URI
@@ -78,7 +148,12 @@ class URIParser
 		std::vector<std::string> errorList;
 };
 
-//constructor
+/**
+* URIParser
+* class constructor
+*
+* @param std::string uriStr
+*/
 URIParser::URIParser(std::string uriStr)
 {
 	str = uriStr;
@@ -87,12 +162,21 @@ URIParser::URIParser(std::string uriStr)
 	port = -1;
 }
 
-//default destructor
+/**
+* ~URIParser
+* default class destructor
+*/
 URIParser::~URIParser()
 {
 }
 
-inline std::string URIParser::printAll()
+/**
+* printAll
+* function that returns a string which holds all information relevant to the URI
+*
+* @return std::string
+*/
+std::string URIParser::printAll()
 {
 	return
 		"Scheme: " + getScheme() + "\n" +
@@ -109,6 +193,8 @@ inline std::string URIParser::printAll()
 /**
 * URITypeCheck
 * function to check which type of URI the input string is
+* as well as parsing the string automatically
+*
 * @param std::string str
 * @return 
 */
@@ -282,6 +368,13 @@ int URIParser::URITypeCheck(std::string str)
 	return uriType;
 }
 
+/**
+* checkHostDomain
+* function that checks the regex syntax of the host domain for validity
+*
+* @param std::string str
+* @return valid
+*/
 bool URIParser::checkHostDomain(std::string str)
 {
 	//regex check for the host
