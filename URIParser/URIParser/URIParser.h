@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <algorithm>
+#include <regex>
 
 
 class URIParser
@@ -20,7 +21,11 @@ class URIParser
 		std::string getUser() { return user; };
 		std::string getPassword() { return password; };
 		std::string getHost() { return host; };
-		int getPort() { return port; };
+		std::string getPort() { 
+			if (port < 0)
+				return "NO / DEFAULT PORT";
+			else
+			return std::to_string(port); };
 		std::string getPath() { return path; };
 		std::string getQuery() { return query; };
 		std::string getFragment() { return fragment; };
@@ -28,7 +33,7 @@ class URIParser
 		std::string printAll();
 
 		//regex check, to validate each part of the URI as valid or not
-		bool regexCheck(std::string str);
+		bool URITypeCheck(std::string str);
 
 	private:
 		//string variables to store the specific parts of the URI
@@ -62,21 +67,25 @@ URIParser::URIParser(std::string uriStr)
 {
 	str = uriStr;
 	//check if the URI is not empty
-	if ((str.length() >= 3))
+	if ((str.length() > 0))
 	{
 		//check if the URI is valid
-		if (regexCheck(str))
+		if (URITypeCheck(str))
 		{
-			std::cout << "URI is complete and valid\n\n";
+			std::cout << "----------------------------------------------------\n";
+			std::cout << "URI is complete and valid\n";
+			std::cout << "----------------------------------------------------\n";
 		}
 		else
 		{
-			std::cout << "The URI is missing a scheme and path/authority\n\n";
+			std::cout << "----------------------------------------------------\n";
+			std::cout << "The URI is missing a scheme and path/authority\n";
+			std::cout << "----------------------------------------------------\n";
 		}
 	}
 	else
 	{
-		std::cout << "URI has minimum 3 characters\n";
+		std::cout << "Empty Input\n\n";
 	}
 }
 
@@ -92,18 +101,20 @@ inline std::string URIParser::printAll()
 		"User: " + getUser() + "\n" +
 		"Password: " + getPassword() + "\n" +
 		"Host: " + getHost() + "\n" +
-		"Port: " + std::to_string(getPort()) + "\n" +
+		"Port: " + getPort() + "\n" +
 		"Path: " + getPath() + "\n" +
 		"Query: " + getQuery() + "\n" +
-		"Fragment: " + getFragment() + "\n";
+		"Fragment: " + getFragment() + "\n" +
+		"_______________________________\n";
 }
 
-bool URIParser::regexCheck(std::string str)
+bool URIParser::URITypeCheck(std::string str)
 {
 	bool validScheme = true, auth_or_path_exists = false;
 
 	std::string tempStr = str;
-	//check for scheme
+	//check for schemes
+	//"://" is used for web resources
 	if (tempStr.find("://") != std::string::npos)
 	{
 		scheme = tempStr.substr(0, tempStr.find("://"));
@@ -112,7 +123,7 @@ bool URIParser::regexCheck(std::string str)
 		//std::cout << tempStr << std::endl;
 
 		//check for the authority if there is any
-		if (tempStr.find("/"))
+		if (tempStr.find("/") != std::string::npos)
 		{
 			authority = tempStr.substr(0, tempStr.find("/"));
 			tempStr = tempStr.substr(tempStr.find("/") + 1);
@@ -120,35 +131,64 @@ bool URIParser::regexCheck(std::string str)
 			//checking if there are values for authority
 			if (!authority.empty())
 			{
-				user = authority.substr(0, authority.find(":"));
-				//usually not a good idea to include the password unencrypted but this is just to parse the URI
-				//I am interested in cybersecurity though
-				password = authority.substr(authority.find(":") + 1);
-
 				//find if an '@' symbol exists, otherwise the authority is the host
-				if (authority.find("@"))
+				if (authority.find("@") != std::string::npos)
 				{
-					user = "NONE";
-					password = "NONE";
-					host = authority.substr(authority.find("@") + 1);
+					//check if password was included
+					if (authority.find(":") != std::string::npos)
+					{
+						user = authority.substr(0, authority.find(":"));
+						authority = authority.substr(authority.find(":"));
+						//usually not a good idea to include the password unencrypted but this is just to parse the URI
+						//I am interested in cybersecurity though
+						password = authority.substr(authority.find(":") + 1, authority.find("@") - 1);
+						authority = authority.substr(authority.find("@") + 1);
+
+						auth_or_path_exists = true;
+					}
+					else
+					{
+						user = authority.substr(0, authority.find("@"));
+						password = "NONE";
+						authority = authority.substr(authority.find("@") + 1);
+						if (!user.empty())
+						{
+							auth_or_path_exists = true;
+						}
+					}
+
+					//validation of the host is usually "*.*" which means there needs to 
+					//be a (sub)domain and a top level domain, as well as for IPv4/6 addresses
+					host = authority;
+
+					//regexes
+					std::regex domain("[\w].[A-Za-z]");
+
+					if (std::regex_match(host, domain))
+					{
+						std::cout << "valid\n";
+					}
+					else
+					{
+						std::cout << "invalid\n";
+					}
 				}
 				else
 				{
+					user = "NONE";
+					password = "NONE";
 					host = authority;
+					auth_or_path_exists = true;
 				}
-
-				auth_or_path_exists = true;
 			}
+			//empty authority = no user, password and host
 			else
 			{
 				user = "NOT FOUND";
-				std::cout << user << std::endl;
+				password = "NOT FOUND";
+				host = "NOT FOUND";
+				auth_or_path_exists = false;
 			}
-
-
-
-			
-
 		}
 		//no next '/' symbol means no authority
 		else
@@ -156,19 +196,37 @@ bool URIParser::regexCheck(std::string str)
 			host = "NOT FOUND";
 		}
 	}
+	//":\" is for local resources
 	else if (tempStr.find(":\\") != std::string::npos)
 	{
 		scheme = tempStr.substr(0, tempStr.find(":\\"));
 		tempStr = tempStr.substr(tempStr.find(":\\"));
 		tempStr.erase(0, 2);
 		//std::cout << tempStr << std::endl;
+
+		path = tempStr;
+		//so long as there is a scheme, file paths are valid
+		if (!scheme.empty())
+		{
+			auth_or_path_exists = true;
+		}
 	}
+	//":"
 	else if (tempStr.find(":") != std::string::npos)
 	{
 		scheme = tempStr.substr(0, tempStr.find(":"));
 		tempStr = tempStr.substr(tempStr.find(":"));
 		tempStr.erase(0, 1);
 		//std::cout << tempStr << std::endl;
+
+		//everything else is a path
+		path = tempStr;
+
+		//if scheme or path is empty, it is not valid
+		if (!scheme.empty() && !path.empty())
+		{
+			auth_or_path_exists = true;
+		}
 	}
 	else
 	{
