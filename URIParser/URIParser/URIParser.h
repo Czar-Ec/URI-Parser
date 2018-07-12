@@ -103,10 +103,55 @@ bool URIParser::regexCheck(std::string str)
 	//check for scheme
 	if (tempStr.find("://") != std::string::npos)
 	{
-		scheme = tempStr.substr(0, tempStr.find(":/"));
-		tempStr = tempStr.substr(tempStr.find(":/"));
+		scheme = tempStr.substr(0, tempStr.find("://"));
+		tempStr = tempStr.substr(tempStr.find("://"));
 		tempStr.erase(0, 3);
 		//std::cout << tempStr << std::endl;
+
+		//check for the authority if there is any
+		if (tempStr.find("/"))
+		{
+			authority = tempStr.substr(0, tempStr.find("/"));
+			tempStr = tempStr.substr(tempStr.find("/") + 1);
+
+			//checking if there are values for authority
+			if (!authority.empty())
+			{
+				user = authority.substr(0, authority.find(":"));
+				//usually not a good idea to include the password unencrypted but this is just to parse the URI
+				//I am interested in cybersecurity though
+				password = authority.substr(authority.find(":") + 1);
+
+				//find if an '@' symbol exists, otherwise the authority is the host
+				if (authority.find("@"))
+				{
+					user = "NONE";
+					password = "NONE";
+					host = authority.substr(authority.find("@") + 1);
+				}
+				else
+				{
+					host = authority;
+				}
+
+				auth_or_path_exists = true;
+			}
+			else
+			{
+				user = "NOT FOUND";
+				std::cout << user << std::endl;
+			}
+
+
+
+			
+
+		}
+		//no next '/' symbol means no authority
+		else
+		{
+			host = "NOT FOUND";
+		}
 	}
 	else if (tempStr.find(":\\") != std::string::npos)
 	{
@@ -128,18 +173,7 @@ bool URIParser::regexCheck(std::string str)
 		scheme = "NOT FOUND";
 	}
 
-	//check for the authority if there is any
-	if (tempStr.find("@"))
-	{
-		authority = tempStr.substr(0, tempStr.find("@"));
-		tempStr = tempStr.substr(tempStr.find("@") + 1);
-
-		user = authority.substr(0, authority.find(":"));
-		//usually not a good idea to include the password unencrypted but this is just to parse the URI
-		//I am interested in cybersecurity though
-		password = authority.substr(authority.find(":") + 1);
-	}
-
+	
 
 	return validScheme && auth_or_path_exists;
 }
