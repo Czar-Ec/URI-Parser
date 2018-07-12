@@ -61,9 +61,8 @@ class URIParser
 URIParser::URIParser(std::string uriStr)
 {
 	str = uriStr;
-
 	//check if the URI is not empty
-	if ((str.length() != 0))
+	if ((str.length() >= 3))
 	{
 		//check if the URI is valid
 		if (regexCheck(str))
@@ -74,6 +73,10 @@ URIParser::URIParser(std::string uriStr)
 		{
 			std::cout << "The URI is missing a scheme and path/authority\n\n";
 		}
+	}
+	else
+	{
+		std::cout << "URI has minimum 3 characters\n";
 	}
 }
 
@@ -160,7 +163,7 @@ bool URIParser::regexCheck(std::string str)
 		tempStr.erase(0, 2);
 		//std::cout << tempStr << std::endl;
 	}
-	else if (tempStr.find(":"))
+	else if (tempStr.find(":") != std::string::npos)
 	{
 		scheme = tempStr.substr(0, tempStr.find(":"));
 		tempStr = tempStr.substr(tempStr.find(":"));
