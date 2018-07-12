@@ -33,9 +33,23 @@ class URIParser
 		std::string printAll();
 
 		//regex check, to validate each part of the URI as valid or not
-		bool URITypeCheck(std::string str);
+		int URITypeCheck(std::string str);
+
+		//prints error to screen
+		void errorListAdd(std::string error) { errorList.push_back(error); }
+		std::vector<std::string> getErrorList() { return errorList; }
+
+		//uriTypes
+		const int URL_TYPE_URI = 0,
+			FILE_TYPE_URI = 1,
+			URN_TYPE_URI = 2,
+			INVALID_URN = -1;
 
 	private:
+
+		//validates host domain
+		bool checkHostDomain(std::string str);
+
 		//string variables to store the specific parts of the URI
 		std::string
 			str, // save the string used to instantiate the parser
@@ -60,33 +74,17 @@ class URIParser
 		
 		//access port
 		int	port;
+
+		std::vector<std::string> errorList;
 };
 
 //constructor
 URIParser::URIParser(std::string uriStr)
 {
 	str = uriStr;
-	//check if the URI is not empty
-	if ((str.length() > 0))
-	{
-		//check if the URI is valid
-		if (URITypeCheck(str))
-		{
-			std::cout << "----------------------------------------------------\n";
-			std::cout << "URI is complete and valid\n";
-			std::cout << "----------------------------------------------------\n";
-		}
-		else
-		{
-			std::cout << "----------------------------------------------------\n";
-			std::cout << "The URI is missing a scheme and path/authority\n";
-			std::cout << "----------------------------------------------------\n";
-		}
-	}
-	else
-	{
-		std::cout << "Empty Input\n\n";
-	}
+
+	//port initially set to -1
+	port = -1;
 }
 
 //default destructor
@@ -108,8 +106,15 @@ inline std::string URIParser::printAll()
 		"_______________________________\n";
 }
 
-bool URIParser::URITypeCheck(std::string str)
+/**
+* URITypeCheck
+* function to check which type of URI the input string is
+* @param std::string str
+* @return 
+*/
+int URIParser::URITypeCheck(std::string str)
 {
+	int uriType = INVALID_URN;
 	bool validScheme = true, auth_or_path_exists = false;
 
 	std::string tempStr = str;
@@ -117,12 +122,15 @@ bool URIParser::URITypeCheck(std::string str)
 	//"://" is used for web resources
 	if (tempStr.find("://") != std::string::npos)
 	{
+		//URL type URI
+		uriType = URL_TYPE_URI;
+
 		scheme = tempStr.substr(0, tempStr.find("://"));
 		tempStr = tempStr.substr(tempStr.find("://"));
 		tempStr.erase(0, 3);
 		//std::cout << tempStr << std::endl;
 
-		//check for the authority if there is any
+		//check for the authority if there are any
 		if (tempStr.find("/") != std::string::npos)
 		{
 			authority = tempStr.substr(0, tempStr.find("/"));
@@ -144,7 +152,18 @@ bool URIParser::URITypeCheck(std::string str)
 						password = authority.substr(authority.find(":") + 1, authority.find("@") - 1);
 						authority = authority.substr(authority.find("@") + 1);
 
-						auth_or_path_exists = true;
+						//check if password and user are not empty
+						if (!user.empty() && !password.empty())
+						{
+							if (checkHostDomain(host))
+							{
+								auth_or_path_exists = true;
+							}
+						}
+						else
+						{
+							errorListAdd("User or password is empty\n");
+						}
 					}
 					else
 					{
@@ -153,7 +172,14 @@ bool URIParser::URITypeCheck(std::string str)
 						authority = authority.substr(authority.find("@") + 1);
 						if (!user.empty())
 						{
-							auth_or_path_exists = true;
+							if (checkHostDomain(host))
+							{
+								auth_or_path_exists = true;
+							}								
+						}
+						else
+						{
+							errorListAdd("URI user not found when '@' is detected");
 						}
 					}
 
@@ -161,24 +187,19 @@ bool URIParser::URITypeCheck(std::string str)
 					//be a (sub)domain and a top level domain, as well as for IPv4/6 addresses
 					host = authority;
 
-					//regexes
-					std::regex domain("[\w].[A-Za-z]");
-
-					if (std::regex_match(host, domain))
-					{
-						std::cout << "valid\n";
-					}
-					else
-					{
-						std::cout << "invalid\n";
-					}
+					if (checkHostDomain(host))
+					{	}
 				}
 				else
 				{
 					user = "NONE";
 					password = "NONE";
 					host = authority;
-					auth_or_path_exists = true;
+
+					if (checkHostDomain(host))
+					{
+						auth_or_path_exists = true;
+					}
 				}
 			}
 			//empty authority = no user, password and host
@@ -187,6 +208,9 @@ bool URIParser::URITypeCheck(std::string str)
 				user = "NOT FOUND";
 				password = "NOT FOUND";
 				host = "NOT FOUND";
+
+				errorListAdd("URI has no scheme or path\n");
+
 				auth_or_path_exists = false;
 			}
 		}
@@ -194,11 +218,15 @@ bool URIParser::URITypeCheck(std::string str)
 		else
 		{
 			host = "NOT FOUND";
+			errorListAdd("URI host not found");
 		}
 	}
 	//":\" is for local resources
 	else if (tempStr.find(":\\") != std::string::npos)
 	{
+		//file system URI
+		uriType = FILE_TYPE_URI;
+
 		scheme = tempStr.substr(0, tempStr.find(":\\"));
 		tempStr = tempStr.substr(tempStr.find(":\\"));
 		tempStr.erase(0, 2);
@@ -210,10 +238,17 @@ bool URIParser::URITypeCheck(std::string str)
 		{
 			auth_or_path_exists = true;
 		}
+		else
+		{
+			errorListAdd("URI scheme not found");
+		}
 	}
 	//":"
 	else if (tempStr.find(":") != std::string::npos)
 	{
+		//URN URI
+		uriType = URN_TYPE_URI;
+
 		scheme = tempStr.substr(0, tempStr.find(":"));
 		tempStr = tempStr.substr(tempStr.find(":"));
 		tempStr.erase(0, 1);
@@ -227,15 +262,41 @@ bool URIParser::URITypeCheck(std::string str)
 		{
 			auth_or_path_exists = true;
 		}
+		else
+		{
+			errorListAdd("URI scheme or path not found");
+		}
 	}
 	else
 	{
 		validScheme = false;
 		scheme = "NOT FOUND";
+		errorListAdd("URI scheme and path not found");
 	}
 
-	
+	if (!validScheme || !auth_or_path_exists)
+	{
+		uriType = -1;
+	}
 
-	return validScheme && auth_or_path_exists;
+	return uriType;
+}
+
+bool URIParser::checkHostDomain(std::string str)
+{
+	//regex check for the host
+	//regex taken and modified from: https://stackoverflow.com/questions/36903985/email-validation-in-c
+	std::regex domain("(\\w+)(\\.|_)?(\\w*)\.(\\w+)(\\.(\\w+))+");
+	if (std::regex_match(str, domain))
+	{
+		//std::cout << "match\n";
+		return true;
+	}
+	else
+	{
+		//std::cout << "no match\n";
+		errorListAdd("URI host domain is not valid");
+		return false;
+	}
 }
 

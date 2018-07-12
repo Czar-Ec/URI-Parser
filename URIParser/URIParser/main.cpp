@@ -49,8 +49,8 @@ int main()
 	catch (std::exception &e)
 	{
 		std::cout << e.what() << std::endl << std::endl
-			<< "Exiting program...";
-		Sleep(3000);
+			<< "Exiting program in 10 seconds...";
+		Sleep(10000);
 		return 0;
 	}
 
@@ -70,6 +70,32 @@ void parse()
 	std::cin >> uriStr;
 
 	URIParser testURI = URIParser(uriStr);
+
+	//check if the URI is not empty
+	if ((testURI.getStr().length() > 0))
+	{
+		//check if the URI is valid
+		if (testURI.URITypeCheck(testURI.getStr()) >= 0)
+		{
+			std::cout << "----------------------------------------------------\n";
+			std::cout << "URI is complete and valid\n";
+			std::cout << "----------------------------------------------------\n";
+		}
+		else
+		{
+			std::cout << "----------------------------------------------------\n";
+			std::cout << "The URI has errors:\n\n";
+			for (auto list : testURI.getErrorList())
+			{
+				std::cout << list << std::endl;
+			}
+			std::cout << "----------------------------------------------------\n";
+		}
+	}
+	else
+	{
+		std::cout << "Empty Input\n\n";
+	}
 
 	//Print individual components
 	/*std::cout <<
