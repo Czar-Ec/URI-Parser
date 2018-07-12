@@ -48,7 +48,10 @@ int main()
 	}
 	catch (std::exception &e)
 	{
-		std::cout << e.what() << std::endl << std::endl
+		std::cout <<
+			"++++++++++++++++++++++++\n" <<
+			e.what() << std::endl <<
+			"++++++++++++++++++++++++\n\n"
 			<< "Exiting program in 10 seconds...";
 		Sleep(10000);
 		return 0;
@@ -84,7 +87,7 @@ void parse()
 		else
 		{
 			std::cout << "----------------------------------------------------\n";
-			std::cout << "The URI has errors:\n\n";
+			std::cout << "The URI has errors/warnings:\n\n";
 			for (auto list : testURI.getErrorList())
 			{
 				std::cout << list << std::endl;
