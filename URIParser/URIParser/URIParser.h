@@ -262,13 +262,14 @@ bool URIParser::checkHostDomain(std::string str)
 	//regex check for the host
 	//regex taken and modified from: https://stackoverflow.com/questions/36903985/email-validation-in-c
 	std::regex domain("(\\w+)(\\.|_)?(\\w*)\.(\\w+)(\\.(\\w+))+");
+	std::regex ldapHost("\[(\w)\]");
 	if (str == "localhost")
 	{
 		return true;
 	}
 	else
 	{
-		if (std::regex_match(str, domain))
+		if (std::regex_match(str, domain) || std::regex_match(str, ldapHost))
 		{
 			//std::cout << "match\n";
 			return true;
@@ -410,38 +411,6 @@ bool URIParser::parseURL(std::string tempStr)
 						errorListAdd("URI user not found when '@' is detected");
 					}
 				}
-
-				//check if there are ports
-
-				if (authority.find(":") != std::string::npos)
-				{
-					bool validPort = false;
-
-					host = authority.substr(authority.find("@") + 1, authority.find(":") - 1);
-					//convert port string to int and check if not empty
-					if (!authority.substr(authority.find(":") + 1).empty())
-					{
-						port = std::stoi(authority.substr(authority.find(":") + 1));
-					}
-					else
-					{
-						errorListAdd("URI port is empty when ':' is detected");
-						port = -2;
-						valid = false;
-					}
-
-					//validate host and port
-					valid = checkHostDomain(host) && validPort;
-				}
-				//no ports means the leftover authority is the host domain
-				else
-				{
-					host = authority;
-					valid = checkHostDomain(host);
-				}
-
-				path = tempStr;
-				
 			}
 			else
 			{
@@ -463,6 +432,82 @@ bool URIParser::parseURL(std::string tempStr)
 
 			valid = false;
 		}
+
+		//check if there are ports
+		if (authority.find(":") != std::string::npos)
+		{
+			bool validPort = false;
+
+			if (authority.find("@") != std::string::npos)
+			{
+				host = authority.substr(authority.find("@") + 1, authority.find(":") - 1);
+			}
+			else
+			{
+				host = authority.substr(authority.find("@") + 1, authority.find(":"));
+			}
+
+			//convert port string to int and check if not empty
+			if (!authority.substr(authority.find(":") + 1).empty())
+			{
+				port = std::stoi(authority.substr(authority.find(":") + 1));
+			}
+			else
+			{
+				errorListAdd("URI port is empty when ':' is detected");
+				port = -2;
+				valid = false;
+			}
+
+			//validate host and port
+			valid = checkHostDomain(host) && validPort;
+		}
+		//no ports means the leftover authority is the host domain
+		else
+		{
+			host = authority;
+			valid = checkHostDomain(host);
+		}
+
+		//check for paths
+		if (tempStr.find("?") != std::string::npos)
+		{
+			path = tempStr.substr(0, tempStr.find("?"));
+			tempStr = tempStr.substr(tempStr.find("?") + 1);
+		}
+
+		//check for queries
+		if (tempStr.find("#") != std::string::npos)
+		{
+			bool validQuery = false, validFrag = false;
+
+			query = tempStr.substr(0, tempStr.find("#"));
+
+			//queries must not be empty
+			if (!query.empty())
+			{
+				validQuery = query.empty();
+			}
+			else
+			{
+				validQuery = false;
+				errorListAdd("URI query is empty when '?' is detected");
+			}
+
+			fragment = tempStr.substr(tempStr.find("#") + 1);
+
+			//fragment should not be empty
+			if (!fragment.empty())
+			{
+				validFrag = fragment.empty();
+			}
+			else
+			{
+				validFrag = false;
+				errorListAdd("URI fragment is empty when '#' is detected");
+			}
+		}
+
 	}
 	//no next '/' symbol means no authority
 	else
