@@ -6,8 +6,8 @@ The team is very interested in getting to know you and your background. I was wo
 
 The purpose:
 This test is intended to provide some reflection on the following:
-• How you go about design and development of a relatively small, isolated component;
-• How you address aspects of SW quality such as Discoverability, Modularity, Efficiency, and Testability;
+* How you go about design and development of a relatively small, isolated component;
+* How you address aspects of SW quality such as Discoverability, Modularity, Efficiency, and Testability;
 
 Our expectation is that this task should take between two and ten hours work. Do not over-engineer.
 
