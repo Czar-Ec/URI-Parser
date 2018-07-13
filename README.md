@@ -23,3 +23,13 @@ Performance is not to be considered a critical requirement in this design. Howev
 A Test Driven Development (TDD) approach is recommended, but not required. If you follow a TDD-approach, the suite of tests may be deemed to be the component’s documentation.
 
 #### I will not name the company just in case it ruins their hiring process 
+
+# Using the URI Parser
+The URI Parser is a header file that can be attached to any program which takes in a string input. The class automatically parses the string, however the outputs are determined by the programmer using the class. The main.cpp file of this project is just a console program to demonstrate how to use the class in a project so that it can be integrated into other projects.
+
+The URI Parser has been quite heavily tested, however, should there happen to be a bug / issue that is found, please do notify me by pushing an issue on the "Issues" tab above.
+
+### Known bugs:
+* The regex parser for the domain name may not be correct for every input
+* Sometimes inputting multiline inputs break the program but not the class itself
+* may not work for every single URI scheme
