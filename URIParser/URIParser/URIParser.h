@@ -470,43 +470,51 @@ bool URIParser::parseURL(std::string tempStr)
 		}
 
 		//check for paths
+		//paths can be empty
+		//check if there is a query, otherwise leftover is the path
 		if (tempStr.find("?") != std::string::npos)
 		{
 			path = tempStr.substr(0, tempStr.find("?"));
 			tempStr = tempStr.substr(tempStr.find("?") + 1);
 		}
+		else
+		{
+			path = tempStr;
+		}
 
 		//check for queries
+		//queries CANNOT be empty
+		//check if there is a fragment, otherwise, leftover is a query
 		if (tempStr.find("#") != std::string::npos)
 		{
-			bool validQuery = false, validFrag = false;
-
 			query = tempStr.substr(0, tempStr.find("#"));
+			tempStr = tempStr.substr(tempStr.find("#") + 1);
 
-			//queries must not be empty
-			if (!query.empty())
+			if (query.empty())
 			{
-				validQuery = query.empty();
-			}
-			else
-			{
-				validQuery = false;
-				errorListAdd("URI query is empty when '?' is detected");
+				errorListAdd("URI query is empty when '#' is detected");
+				valid = false;
 			}
 
-			fragment = tempStr.substr(tempStr.find("#") + 1);
+			fragment = tempStr;
 
-			//fragment should not be empty
-			if (!fragment.empty())
+			if (fragment.empty())
 			{
-				validFrag = fragment.empty();
-			}
-			else
-			{
-				validFrag = false;
 				errorListAdd("URI fragment is empty when '#' is detected");
+				valid = false;
 			}
 		}
+		else
+		{
+			query = tempStr;
+		}
+
+		//check for the fragment
+		//fragment cannot be empty when the '#' is detected
+		//leftover components are the fragment if not empty
+
+
+
 
 	}
 	//no next '/' symbol means no authority
