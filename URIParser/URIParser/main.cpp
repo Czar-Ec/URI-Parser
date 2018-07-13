@@ -15,10 +15,10 @@ int main()
 		//while loop acts as a menu
 		int menuOpt = -1;
 
-		while (menuOpt != 2)
+		while (menuOpt != 0)
 		{
 			std::cout << "\nURI Parser Menu:\n" <<
-				"1 - Parse URI\n2 - Exit Program\n";
+				"1 - Parse URI\n0 - Exit Program\n";
 
 			std::cin >> menuOpt;
 

@@ -202,7 +202,11 @@ std::string URIParser::printAll()
 * as well as parsing the string automatically
 *
 * @param std::string str
-* @return 
+* URL_TYPE_URI = 0
+* FILE_TYPE_URI = 1
+* URN_TYPE_URI = 2
+* INVALID_URI = -1
+* @return URItype
 */
 int URIParser::URITypeCheck(std::string str)
 {
