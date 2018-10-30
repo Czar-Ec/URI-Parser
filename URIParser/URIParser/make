@@ -1,0 +1,2 @@
+URIExample: main.cpp URIParser.h
+    gcc -o main.cpp URIParser.h -I.
