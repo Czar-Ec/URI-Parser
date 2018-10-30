@@ -193,7 +193,7 @@ std::string URIParser::printAll()
 		"Path: " + getPath() + "\n" +
 		"Query: " + getQuery() + "\n" +
 		"Fragment: " + getFragment() + "\n" +
-		"_______________________________\n";
+		"==============================\n";
 }
 
 /**
